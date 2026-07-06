@@ -65,3 +65,39 @@ class LogLevel(str, enum.Enum):
     WARNING = "WARNING"
     ERROR = "ERROR"
     CRITICAL = "CRITICAL"
+
+class PatchStatus(str, enum.Enum):
+    GENERATED = "GENERATED"
+    VALIDATED = "VALIDATED"
+    REVIEWED = "REVIEWED"
+    APPROVED = "APPROVED"
+    APPLIED = "APPLIED"
+    REJECTED = "REJECTED"
+    FAILED = "FAILED"
+
+class ExecutionStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    PROVISIONING = "PROVISIONING"
+    INSTALLING = "INSTALLING"
+    BUILDING = "BUILDING"
+    VALIDATING = "VALIDATING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+class TestStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    PASSED = "PASSED"
+    FAILED = "FAILED"
+    SKIPPED = "SKIPPED"
+    ERROR = "ERROR"
+
+class FailureCategory(str, enum.Enum):
+    SYNTAX = "SYNTAX"
+    ASSERTION = "ASSERTION"
+    DEPENDENCY = "DEPENDENCY"
+    RUNTIME = "RUNTIME"
+    BUILD = "BUILD"
+    ENVIRONMENT = "ENVIRONMENT"
+    FLAKY = "FLAKY"
+    UNKNOWN = "UNKNOWN"

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, useCallback } from "react"
+import { getWorkflowEvents } from "@/services/workflows"
 
 export interface LiveEvent {
   event: string
@@ -58,12 +59,33 @@ export function useWorkflowEvents(workflowId: string | null) {
   }, [workflowId])
 
   useEffect(() => {
-    connect()
+    let mounted = true
+
+    // Fetch historical events first
+    if (workflowId) {
+      getWorkflowEvents(workflowId).then((res) => {
+        if (!mounted) return
+        const historical = res.events.map((evt) => ({
+          event: `agent.${evt.agent_type.toLowerCase()}.${evt.level.toLowerCase()}`,
+          data: {
+            message: evt.message,
+            ...evt.metadata,
+          },
+          receivedAt: evt.created_at,
+        }))
+        setEvents(historical)
+        
+        // Connect websocket after fetching history to avoid gaps
+        connect()
+      }).catch(console.error)
+    }
+
     return () => {
+      mounted = false
       if (wsRef.current) wsRef.current.close()
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current)
     }
-  }, [connect])
+  }, [workflowId, connect])
 
   const clearEvents = useCallback(() => setEvents([]), [])
 

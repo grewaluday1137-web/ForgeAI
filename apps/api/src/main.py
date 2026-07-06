@@ -14,11 +14,13 @@ from src.core.exceptions import (
 from src.core.middleware import SecurityHeadersMiddleware
 from src.api.health import router as health_router
 from src.api.auth import router as auth_router
+from src.api.testing import router as testing_router
 from src.api.ws import router as ws_router
 from src.api.projects import router as projects_router
 from src.api.repositories import router as repositories_router
 from src.api.workspaces import router as workspaces_router
 from src.api.workflows import router as workflows_router
+from src.api.tasks import router as tasks_router
 
 # ─── Rate Limiter (shared across routers) ────────────────────────────────────
 limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
@@ -70,9 +72,11 @@ app.include_router(health_router, prefix=settings.API_V1_STR)
 app.include_router(auth_router, prefix=settings.API_V1_STR)
 app.include_router(ws_router, prefix=settings.API_V1_STR)
 app.include_router(projects_router, prefix=settings.API_V1_STR)
+app.include_router(testing_router, prefix=settings.API_V1_STR)
 app.include_router(repositories_router, prefix=settings.API_V1_STR)
 app.include_router(workspaces_router, prefix=settings.API_V1_STR)
 app.include_router(workflows_router, prefix=settings.API_V1_STR)
+app.include_router(tasks_router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 def root():

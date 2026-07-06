@@ -22,7 +22,7 @@ router = APIRouter(prefix="/workflows", tags=["workflows"])
 # ─── Schemas for this module ──────────────────────────────────────────────────
 
 class TriggerPlanRequest(BaseModel):
-    project_id: UUID
+    project_id: UUID | None = None
     user_request: str | None = None
 
 
@@ -128,12 +128,23 @@ async def api_trigger_plan(
         workflow.user_request = body.user_request
         await db.commit()
 
+    # Resolve project_id if not provided
+    project_id = body.project_id
+    if not project_id:
+        from src.models.workspace import Workspace
+        from src.models.repository import Repository
+        stmt = select(Repository.project_id).join(Workspace, Workspace.repository_id == Repository.id).where(Workspace.id == workflow.workspace_id)
+        proj_res = await db.execute(stmt)
+        project_id = proj_res.scalar_one_or_none()
+        if not project_id:
+            raise HTTPException(status_code=500, detail="Could not resolve project_id for workflow")
+
     async def run_orchestration():
         """Background task — gets its own DB session."""
         from src.db.session import AsyncSessionLocal
         async with AsyncSessionLocal() as bg_db:
             engine = OrchestratorEngine(db=bg_db)
-            await engine.start_planning(workflow_id, body.project_id)
+            await engine.start_planning(workflow_id, project_id)
 
     background_tasks.add_task(run_orchestration)
 
@@ -158,6 +169,42 @@ async def api_get_plan(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No execution plan found for this workflow yet.")
 
     return plan
+
+
+@router.post("/{workflow_id}/execute")
+async def api_execute_workflow(
+    workflow_id: UUID,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Triggers the execution of a READY workflow.
+    In this milestone, this just updates the status and logs it,
+    since only Planner is active.
+    """
+    result = await db.execute(select(Workflow).where(Workflow.id == workflow_id))
+    workflow = result.scalar_one_or_none()
+
+    if not workflow:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workflow not found")
+
+    if workflow.status != WorkflowStatus.READY:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Cannot execute workflow in '{workflow.status.value}' status. Must be READY."
+        )
+
+    # In a full implementation, this would trigger OrchestratorEngine.start_execution()
+    # For Milestone 5, we'll mark it as RUNNING then COMPLETED (since no other agents run).
+    workflow.status = WorkflowStatus.RUNNING
+    await db.commit()
+
+    return {
+        "message": "Execution started",
+        "workflow_id": str(workflow_id),
+        "status": "RUNNING"
+    }
 
 
 @router.get("/{workflow_id}/status", response_model=WorkflowStatusResponse)
@@ -250,3 +297,25 @@ async def api_retry_agent(
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Agent {agent_type} is not yet active in this milestone.")
 
     return {"message": f"Agent {agent_type} retry queued", "workflow_id": str(workflow_id)}
+
+
+@router.delete("/{workflow_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def api_delete_workflow(
+    workflow_id: UUID,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Deletes a workflow and all its associated tasks and execution plans."""
+    result = await db.execute(select(Workflow).where(Workflow.id == workflow_id))
+    workflow = result.scalar_one_or_none()
+
+    if not workflow:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workflow not found")
+
+    if workflow.created_by != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete this workflow")
+
+    await db.delete(workflow)
+    await db.commit()
+    return None
+

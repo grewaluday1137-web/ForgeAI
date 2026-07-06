@@ -54,12 +54,12 @@ export function CreateProjectDialog() {
     mutationFn: createProject,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] })
-      toast({ title: "Project created!", description: "Your new project is ready." })
+      toast.success("Project created!", "Your new project is ready.")
       setOpen(false)
       form.reset()
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" })
+      toast.error("Error", error.message)
     },
   })
 

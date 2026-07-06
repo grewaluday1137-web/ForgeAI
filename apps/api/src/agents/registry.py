@@ -1,6 +1,10 @@
 import logging
 from src.agents.base import BaseAgent
 from src.models.enums import AgentType
+from src.agents.planner.agent import PlannerAgent
+from src.agents.architect.agent import ArchitectAgent
+from src.agents.developer.agent import DeveloperAgent
+from src.agents.tester.agent import TesterAgent
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +32,7 @@ class _InactiveAgent(BaseAgent):
 class AgentRegistry:
     """
     Central registry for all ForgeAI agents.
-    All 8 agent types are registered; only PlannerAgent executes in Milestone 5.
+    All 8 agent types are registered; only PlannerAgent, ArchitectAgent, and DeveloperAgent execute.
     Future milestones activate remaining agents without any architectural changes.
     """
 
@@ -38,15 +42,14 @@ class AgentRegistry:
         self._setup()
 
     def _setup(self):
-        # Import and register the Planner (active)
-        from src.agents.planner.agent import PlannerAgent
+        # Import and register the active agents
         self.register(AgentType.PLANNER, PlannerAgent(), active=True)
+        self.register(AgentType.ARCHITECT, ArchitectAgent(), active=True)
+        self.register(AgentType.DEVELOPER, DeveloperAgent(), active=True)
+        self.register(AgentType.TESTER, TesterAgent(), active=True)
 
         # Register all other agents as inactive placeholders
         for agent_type in [
-            AgentType.ARCHITECT,
-            AgentType.DEVELOPER,
-            AgentType.TESTER,
             AgentType.REVIEWER,
             AgentType.SECURITY,
             AgentType.DOCUMENTATION,

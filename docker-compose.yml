@@ -26,11 +26,20 @@ services:
       - "8000:8000"
     volumes:
       - ./apps/api:/app
+      - api_repos:/app/data/repos
+      - /var/run/docker.sock:/var/run/docker.sock
+      - api_npm_cache:/app/data/npm_cache
+      - api_pip_cache:/app/data/pip_cache
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/forgeai
       - REDIS_URL=redis://redis:6379/0
       - ENVIRONMENT=development
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - MOCK_AI=false
+      - GITHUB_PAT=${GITHUB_PAT}
+      - REPO_STORAGE_PATH=/app/data/repos
     depends_on:
       - db
       - redis
@@ -59,3 +68,6 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  api_repos:
+  api_npm_cache:
+  api_pip_cache:

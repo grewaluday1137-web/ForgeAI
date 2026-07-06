@@ -20,12 +20,24 @@ def get_provider() -> AIProvider:
     if _provider_instance is not None:
         return _provider_instance
 
-    if settings.GEMINI_API_KEY:
+    if settings.MOCK_AI:
+        logger.info("AI Provider: MOCK_AI=true — Using MockProvider")
+        from src.agents.providers.mock import MockProvider
+        _provider_instance = MockProvider()
+    elif settings.GROQ_API_KEY:
+        logger.info("AI Provider: Using GroqProvider")
+        from src.agents.providers.groq import GroqProvider
+        _provider_instance = GroqProvider()
+    elif settings.OPENROUTER_API_KEY:
+        logger.info("AI Provider: Using OpenRouterProvider")
+        from src.agents.providers.openrouter import OpenRouterProvider
+        _provider_instance = OpenRouterProvider()
+    elif settings.GEMINI_API_KEY:
         logger.info("AI Provider: Using GeminiProvider (gemini-2.0-flash)")
         from src.agents.providers.gemini import GeminiProvider
         _provider_instance = GeminiProvider()
     else:
-        logger.warning("AI Provider: GEMINI_API_KEY not set — falling back to MockProvider")
+        logger.warning("AI Provider: No API keys set — falling back to MockProvider")
         from src.agents.providers.mock import MockProvider
         _provider_instance = MockProvider()
 

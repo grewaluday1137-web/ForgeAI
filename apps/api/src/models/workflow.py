@@ -32,6 +32,7 @@ class Workflow(Base):
     tasks: Mapped[list["Task"]] = relationship("Task", back_populates="workflow", cascade="all, delete-orphan")
     execution_plan: Mapped["ExecutionPlan | None"] = relationship("ExecutionPlan", back_populates="workflow", uselist=False, cascade="all, delete-orphan")
     agent_executions: Mapped[list["AgentExecution"]] = relationship("AgentExecution", back_populates="workflow", cascade="all, delete-orphan")
+    executions: Mapped[list["WorkflowExecution"]] = relationship("WorkflowExecution", back_populates="workflow", cascade="all, delete-orphan")
 
 
 class Task(Base):

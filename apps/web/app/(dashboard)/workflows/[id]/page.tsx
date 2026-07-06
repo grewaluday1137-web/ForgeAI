@@ -122,11 +122,11 @@ export default function WorkflowDetailPage() {
   const { mutate: startPlan, isPending: isStarting } = useMutation({
     mutationFn: () => triggerPlan(workflowId, "", userRequest || status?.title || ""),
     onSuccess: () => {
-      toast({ title: "Planning started!", description: "The Planner Agent is analyzing your request." })
+      toast.success("Planning started!", "The Planner Agent is analyzing your request.")
       refetchStatus()
     },
     onError: (err: any) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" })
+      toast.error("Error", err.message)
     },
   })
 

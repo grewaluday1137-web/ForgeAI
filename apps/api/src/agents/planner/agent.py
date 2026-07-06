@@ -40,6 +40,7 @@ class PlannerAgent(BaseAgent):
 
             raw_output = await provider.complete(
                 messages=messages,
+                response_schema=ExecutionPlanOutput.model_json_schema(),
                 temperature=0.3,
             )
 

@@ -69,12 +69,15 @@ export async function getWorkflowPlan(workflowId: string): Promise<ExecutionPlan
 
 export async function triggerPlan(
   workflowId: string,
-  projectId: string,
+  projectId: string | null | undefined,
   userRequest: string
 ): Promise<{ message: string; workflow_id: string; status: string }> {
+  const body: Record<string, string> = { user_request: userRequest }
+  if (projectId) body.project_id = projectId
+
   return apiClient(`/workflows/${workflowId}/plan`, {
     method: "POST",
-    body: JSON.stringify({ project_id: projectId, user_request: userRequest }),
+    body: JSON.stringify(body),
   })
 }
 
@@ -84,4 +87,10 @@ export async function getWorkflowEvents(workflowId: string): Promise<{ events: W
 
 export async function getAgentRegistry(): Promise<AgentInfo[]> {
   return apiClient(`/workflows/agents/registry`)
+}
+
+export async function deleteWorkflow(workflowId: string): Promise<void> {
+  return apiClient(`/workflows/${workflowId}`, {
+    method: "DELETE",
+  })
 }

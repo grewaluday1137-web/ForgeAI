@@ -1,10 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { useQuery } from "@tanstack/react-query"
-import { getWorkflows } from "@/services/workflows"
-import { Zap, Clock, ChevronRight, Activity, Plus } from "lucide-react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { getWorkflows, deleteWorkflow } from "@/services/workflows"
+import { Zap, Clock, ChevronRight, Activity, Trash2, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { CreateWorkflowDialog } from "@/components/workflows/create-workflow-dialog"
 
 const STATUS_COLORS: Record<string, string> = {
   CREATED:              "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
@@ -18,9 +19,18 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export default function WorkflowsPage() {
+  const queryClient = useQueryClient()
+  
   const { data: workflows, isLoading } = useQuery({
     queryKey: ["workflows"],
     queryFn: getWorkflows,
+  })
+
+  const { mutate: deleteWf, isPending: isDeleting } = useMutation({
+    mutationFn: deleteWorkflow,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workflows"] })
+    },
   })
 
   return (
@@ -38,13 +48,7 @@ export default function WorkflowsPage() {
           </p>
         </div>
 
-        <Link
-          href="/workspaces"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold shadow-lg shadow-violet-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
-        >
-          <Plus className="size-4" />
-          Create Workflow
-        </Link>
+        <CreateWorkflowDialog />
       </div>
 
       {isLoading ? (
@@ -61,12 +65,9 @@ export default function WorkflowsPage() {
           <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">
             Workflows represent a series of AI-driven tasks orchestrated to achieve a specific goal within a Workspace.
           </p>
-          <Link
-            href="/workspaces"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-900 dark:text-white text-sm font-semibold transition-all"
-          >
-            Go to Workspaces to create one
-          </Link>
+          <div className="flex justify-center">
+            <CreateWorkflowDialog />
+          </div>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -76,7 +77,18 @@ export default function WorkflowsPage() {
               href={`/workflows/${workflow.id}`}
               className="group relative flex flex-col p-5 rounded-2xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 hover:border-violet-500/50 dark:hover:border-violet-500/50 transition-all hover:shadow-xl hover:shadow-violet-500/5 overflow-hidden"
             >
-              <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault()
+                    if (confirm("Are you sure you want to delete this workflow?")) {
+                      deleteWf(workflow.id)
+                    }
+                  }}
+                  className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-md transition-colors"
+                >
+                  <Trash2 className="size-4" />
+                </button>
                 <ChevronRight className="size-5 text-violet-500" />
               </div>
               

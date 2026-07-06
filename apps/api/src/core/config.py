@@ -14,6 +14,13 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
     LOGIN_RATE_LIMIT: str = "10/minute"
     GEMINI_API_KEY: str = ""
+    OPENROUTER_API_KEY: str = ""
+    GROQ_API_KEY: str = ""
+    MOCK_AI: bool = False
+    
+    # GitHub Integration
+    GITHUB_PAT: str = ""
+    REPO_STORAGE_PATH: str = "/app/data/repos"
 
     model_config = SettingsConfigDict(env_file=".env", env_ignore_empty=True, extra="ignore")
 

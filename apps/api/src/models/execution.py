@@ -40,6 +40,26 @@ class ExecutionPlan(Base):
     creator = relationship("User", foreign_keys=[created_by])
 
 
+class WorkflowExecution(Base):
+    """Tracks a specific end-to-end execution attempt of a workflow."""
+    __tablename__ = "workflow_executions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workflow_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workflows.id", ondelete="CASCADE"), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="RUNNING", nullable=False)
+    
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Audit
+    version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), nullable=False)
+
+    # Relationships
+    workflow = relationship("Workflow", back_populates="executions")
+
+
 class AgentExecution(Base):
     """Records every individual agent run — one row per agent per workflow."""
     __tablename__ = "agent_executions"

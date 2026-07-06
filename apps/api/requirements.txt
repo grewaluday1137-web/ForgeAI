@@ -14,3 +14,7 @@ slowapi
 secure
 python-slugify
 google-generativeai
+openai
+httpx
+GitPython
+docker

@@ -187,6 +187,23 @@ class OrchestratorEngine:
 
         logger.info(f"[Orchestrator] Planning complete for workflow={workflow_id}")
 
+    async def start_executing(self, workflow_id: UUID, project_id: UUID) -> None:
+        """
+        Dispatches tasks to the appropriate agents (e.g. DeveloperAgent)
+        based on the ExecutionPlan.
+        """
+        logger.info(f"[Orchestrator] Starting execution for workflow={workflow_id}")
+        workflow = await self._get_workflow(workflow_id)
+        if not workflow:
+            return
+
+        # Transition: READY -> RUNNING
+        await self._transition_workflow(workflow, WorkflowStatus.RUNNING, project_id)
+        
+        # In a full implementation, this would loop over tasks, resolve dependencies, 
+        # and dispatch to the registry. For M7, we trigger DeveloperAgent via the dedicated API.
+        pass
+
     # ─── Internal Helpers ─────────────────────────────────────────────────────
 
     async def _get_workflow(self, workflow_id: UUID) -> Workflow | None:
